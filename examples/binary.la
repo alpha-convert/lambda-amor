@@ -1,0 +1,33 @@
+type number : * = Iexists n : Nat. List(n,unit + ([1.0] unit))
+
+let zero : Iforall j : Nat. M(j|[0.0]) (unit + ([1.0] unit))
+= ILam j. ret (inl ())
+
+let one : Iforall j : Nat. M(j|[1.0]) (unit + ([1.0] unit))
+= ILam j. bind r = (store [1.0] () : M(j|[1.0])[1.0] unit) in ret (inr r)
+
+let inc : [2.0] number -> (Iforall j : Nat. M(j|[0.0]) number)
+= fix inc = lam np. ILam j. 
+  release xs = np in
+  bind _ = tick[j|[1.0]] in
+  unpack (n,xs) = xs in
+  case xs of
+    nil => bind o = one [j] in ret(pack[1] (o :: nil))
+  | y::ys => (case y of
+               _ => bind o = one [j] in ret(pack[n] (o :: ys))
+             | o => release _ = o in
+                    bind p = (store[2.0] (pack [n-1] ys) : M(j|[2.0]) ([2.0] number)) in
+                    bind n2zs = inc p [j] in
+                    unpack (n',zs) = n2zs in
+                    bind z = zero [j] in
+                    ret (pack[n' + 1] (z :: zs))
+             )
+
+type snat : Nat => * = ILam n : Nat. List(n,unit)
+let set : Iforall n : Nat. snat [n] -> (Iforall j : Nat. M(j|const(2.0 * real(n))) number)
+= fix set = ILam n. lam sn. ILam j.
+  case sn of
+    nil => bind z = zero [j] in ret(pack[1] (z :: nil))
+  | _::t => bind n' = set [n-1] t [j] in
+            bind np = (store[2.0] n' : M(j|[2.0]) ([2.0] number)) in
+            inc np [j]

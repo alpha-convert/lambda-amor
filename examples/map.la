@@ -1,0 +1,30 @@
+type snat : Nat => * = ILam n : Nat. List(n,unit)
+
+let pred : Iforall i : Nat. <i >= 1> => snat [i] -> snat [i - 1]
+= ILam i. CLam. lam xs.
+case xs of
+  nil => absurd
+| y::ys => ys
+
+
+let map : Tforall a : *.
+          Tforall b : *.
+          Iforall C : Nat -> Real.
+          Iforall n : Nat.
+             [sum(i.C i,{0,n})] unit
+          -> !(Iforall i : Nat. [C i] unit -> snat [i] -> a -> (Iforall j : Nat. M (j|[0.0]) b))
+          -> List(n,a)
+          -> !(snat [n])
+          -> (Iforall j : Nat. M (j|[0.0]) (List(n,b)))
+= TLam a. TLam b. ILam C. fix map = ILam n.
+  lam p. lam bf. lam xs. lam bN. ILam j.
+    let !f = bf in
+    let !N = bN in
+    release _ = p in
+    case xs of
+      nil => ret nil
+    | y::ys => bind p' = (store[C (n-1)]() : M(j|const(C (n-1))) ([C (n-1)] unit)) in
+               bind z = f[n-1] p' (pred [n] [] N) y [j] in
+               bind p'' = (store[sum(i.C i,{0,n-1})]() : M(j|const(sum(i.C i,{0,n-1}))) ([sum(i.C i,{0,n-1})] unit)) in
+               bind zs = map[n-1] p'' (!f) ys (!(pred[n] [] N)) [j] in
+               ret(z :: zs)

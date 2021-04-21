@@ -1,0 +1,99 @@
+theory SumReal
+  use real.RealInfix
+  use int.Int
+  use HighOrd
+  use real.FromInt
+
+  function sum (a b: int) (f: int -> real) : real
+  (** sum of [f n] for [a <= n < b] *)
+
+  axiom sum_def1:
+    forall f: int -> real, a b: int.
+    b <= a -> sum a b f = 0.0
+
+  axiom sum_def2:
+    forall f: int -> real, a b: int.
+    (a >= 0) /\ (b >= 0) /\ (forall x : int. x >= 0 -> f x >=. 0.0) ->
+    a < b -> sum a b f = sum a (b - 1) f +. f (b-1)
+
+  axiom sum_left:
+    forall f: int -> real, a b: int.
+    (forall x : int. x >= 0 -> f x >=. 0.0) ->
+    0 <= a < b -> sum a b f = f a +. sum (a + 1) b f
+
+  axiom sum_ext:
+    forall f g: int -> real, a b: int.
+    (forall x : int. x >= 0 -> f x >=. 0.0) ->
+    (forall x : int. x >= 0 -> g x >=. 0.0) ->
+    (forall i. 0 <= a <= i < b -> f i = g i) ->
+    sum a b f = sum a b g
+
+  axiom sum_le:
+    forall f g: int -> real, a b: int.
+    (forall x : int. x >= 0 -> f x >=. 0.0) ->
+    (forall x : int. x >= 0 -> g x >=. 0.0) ->
+    (forall i. 0 <= a <= i < b -> f i <=. g i) ->
+    sum a b f <=. sum a b g
+
+  axiom sum_nonneg:
+    forall f: int -> real, a b: int.
+    0 <= a < b /\ (forall x : int. x >= 0 -> f x >=. 0.0) ->
+    0.0 <=. sum a b f
+
+  axiom sum_decomp:
+    forall f: int -> real, a b c: int. 0 <= a <= b <= c ->
+    sum a c f = sum a b f +. sum b c f
+
+  axiom sum_const:
+    forall f : int -> real.
+    (forall x : int. x >= 0 -> f x >=. 0.0) ->
+    (forall x y : int. x >= 0 /\ y >= 0 -> f x = f y) ->
+    forall a b : int. 0 <= a < b ->
+    sum a b f = (from_int ((b - 1) - a)) *. (f 0)
+end
+
+theory SumNat
+  use int.Int
+  use HighOrd
+
+  function sum (a b: int) (f: int -> int) : int
+  (** sum of [f n] for [a <= n < b] *)
+
+  axiom sum_def1:
+    forall f: int -> int, a b: int.
+    b <= a -> sum a b f = 0
+
+  axiom sum_def2:
+    forall f: int -> int, a b: int.
+    (a >= 0) /\ (b >= 0) /\ (forall x : int. x >= 0 -> f x >= 0) ->
+    a < b -> sum a b f = sum a (b - 1) f + f (b-1)
+
+  axiom sum_left:
+    forall f: int -> int, a b: int.
+    (forall x : int. x >= 0 -> f x >= 0) ->
+    0 <= a < b -> sum a b f = f a + sum (a + 1) b f
+
+  axiom sum_ext:
+    forall f g: int -> int, a b: int.
+    (forall x : int. x >= 0 -> f x >= 0) ->
+    (forall x : int. x >= 0 -> g x >= 0) ->
+    (forall i. 0 <= a <= i < b -> f i = g i) ->
+    sum a b f = sum a b g
+
+  axiom sum_le:
+    forall f g: int -> int, a b: int.
+    (forall x : int. x >= 0 -> f x >= 0) ->
+    (forall x : int. x >= 0 -> g x >= 0) ->
+    (forall i. 0 <= a <= i < b -> f i <= g i) ->
+    sum a b f <= sum a b g
+
+  axiom sum_nonneg:
+    forall f: int -> int, a b: int.
+    0 <= a < b /\ (forall x : int. x >= 0 -> f x >= 0) ->
+    0 <= sum a b f
+
+  axiom sum_decomp:
+    forall f: int -> int, a b c: int. 0 <= a <= b <= c ->
+    sum a c f = sum a b f + sum b c f
+
+end

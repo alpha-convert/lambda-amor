@@ -1,0 +1,44 @@
+let leq : nat * nat -> (Iforall j : Nat. M(j|[1.0]) bool) =
+fix leq = lam xy. let (x,y) = xy in
+ILam j.
+case x of
+  0 => bind u = tick[j|[1.0]] in ret true
+| S(x') => case y of
+             0 => bind u = tick[j|[1.0]] in ret false
+           | S(y') => leq (x',y') [j]
+
+let insert : Iforall i : Nat. !nat -> List(i,!nat) -> M (i|[0.0,1.0]) List(i+1,!nat)
+= fix insert =
+ILam i. lam bx. let !x = bx in
+lam xs.
+case xs of
+  nil => ret ((!x)::nil)
+| by::ys => let !y = by in
+               shift(
+                 bind b = leq (x,y) [i-1] in
+                 if b then ret ((!x) :: (!y) :: ys)
+                 else bind zs = insert [i-1] (!x) ys in
+                 ret ((!y) :: zs)
+               )
+
+
+let ins_sort : Iforall i : Nat. List(i,!nat) -> M(i|[0.0,0.0,1.0]) List(i,!nat)
+= fix ins_sort =
+ILam i. lam xs.
+case xs of
+  nil => ret nil
+| y::ys => shift(
+    bind ys' = ins_sort [i - 1] ys in
+    insert [i - 1] y ys'
+)
+
+let unbox : Iforall n : Nat. List(n,!nat) -> List(n,nat)
+= fix unbox = ILam n. lam xs.
+  case xs of
+    nil => nil
+  | by::ys => let ys' = unbox [n-1] ys in
+              let! y = by in
+              y :: ys'
+  
+
+do x : M(4,[0.0,0.0,1.0]) (List(4,nat)) <- bind r = ins_sort [4] (!7 :: (!4 :: (!5 :: (!6 :: nil)))) in ret (unbox [4] r)

@@ -1,0 +1,46 @@
+type cnat : Nat => *
+= ILam n : Nat. 
+  Tforall alpha : Nat => *.
+  Iforall C : Nat -> Real.
+  !(Iforall jn : Nat. (alpha [jn] *  [C jn] unit) -> (Iforall j : Nat. M(j|[0.0]) (alpha [jn+1]))) ->
+  (Iforall j : Nat. M (j|[0.0]) ((alpha [0]) * ([real(n) + sum(i.C i,{0,n})] unit) -> (Iforall j : Nat. M (j|[0.0]) (alpha [n]))))
+
+let zero : cnat [0]
+= TLam a. ILam _. lam f. ILam j. ret(lam p. let (x,_) = p in ILam j. ret x)
+
+let one : cnat [1]
+= TLam alpha. ILam C.lam bf. let !f = bf in ILam j. ret(lam x. ILam j. let (y1,y2) = x in release u = y2 in bind w = (store[C 0]() : M(j|const(C 0)) ([C 0] unit)) in bind u' = tick[j|[1.0]] in bind r = f [0] (y1,w) [j] in ret r)
+
+let succ : Iforall n : Nat.
+           [2.0] unit ->
+           (Iforall j : Nat. M (j|[0.0]) (
+             cnat [n] -> M(j|[0.0]) (cnat [n+1])
+           ))
+= ILam n. lam p. ILam j. ret (lam N. ret(TLam alpha. ILam C. lam bf. let !f = bf in ILam j. ret (lam x. ILam j. let (y1,y2) = x in release u = p in release u' = y2 in bind t = tick[j|[1.0]] in bind b1 = N {alpha} [C] (!f) [j] in bind b = (store[real(n) + sum(i.C i,{0,n})] () : M(j|const(real(n) + sum(i.C i,{0,n}))) ([real(n) + sum(i.C i,{0,n})] unit)) in bind a = b1 (y1,b) [j] in bind c = (store[C n] () : M(j|const(C n)) ([C n] unit)) in bind r = f [n] (a,c) [j] in ret r )))
+
+let add : Iforall n1 : Nat.
+          Iforall n2 : Nat.
+          [4.0 * real(n1) + 2.0] unit ->
+          (Iforall j : Nat. M(j|[0.0])(
+            cnat [n1] ->
+            (Iforall j : Nat. M(j|[0.0])(
+              cnat[n2] ->
+              (Iforall j : Nat. M(j|[0.0])(
+                cnat[n1 + n2]
+              ))
+            ))
+          ))
+= ILam n1. ILam n2. lam p. ILam j. ret (lam N1. ILam j. ret(lam N2. ILam j.
+  release u = p in
+  bind a = N1 {ILam n' : Nat. cnat [n' + n2]} [ILam u : Nat. 3.0] 
+              (!(ILam jn. lam t. ILam j. 
+                 let (y1,y2) = t in
+                 release u = y2 in
+                 bind p = (store[2.0]() : M(j|const(2.0)) ([2.0] unit)) in
+                 bind b1 = succ [jn + n2] p [j] in
+                 bind t = tick[j|[1.0]] in
+                 b1 y1
+              )) [j] in
+  bind p = (store[real(n1) + sum(i.3.0,{0,n1})] () : M(j|const(real(n1) + sum(i.3.0,{0,n1}))) ([real(n1) + sum(i.3.0,{0,n1})] unit)) in
+  a (N2,p) [j]
+))

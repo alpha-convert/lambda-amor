@@ -1,0 +1,51 @@
+let leq : [1.0] unit -> nat * nat -> (Iforall j : Nat. M(j|[0.0]) bool) =
+fix leq = lam u. lam xy. let (x,y) = xy in
+ILam j.
+case x of
+  0 => release w = u in bind w = tick[j|[1.0]] in ret true
+| S(x') => case y of
+             0 => release w = u in bind w = tick[j|[1.0]] in ret false
+           | S(y') => leq u (x',y') [j]
+
+let select : Iforall n : Nat. <n >= 1> => ([n|[0.0,1.0]] unit -> List(n,!nat) -> M(n|[0.0]) (!nat * List(n-1,!nat)))
+= fix select = ILam n. CLam. lam p. lam xs. 
+  release u = p in
+  case xs of
+    nil => absurd
+  | by :: ys => (case ys of
+      nil => ret (by,nil)
+    | u :: w => let ys = (u :: w : List(n-1,!nat)) in
+                shift(
+                    bind p = store[n-1|[0.0,1.0]]() in
+                    bind r = select [n-1] [] p ys in
+                    let (b_min_ys,rest) = r in
+                    let !min_ys = b_min_ys in
+                    let !y = by in
+                    bind p = (store[1.0]() : M(n-1|[1.0]) ([1.0] unit)) in
+                    bind b = leq p (y,min_ys) [n-1] in
+                    if b then ret (!y,(!min_ys) :: rest)
+                    else ret (!min_ys,(!y)::rest)
+                )
+  )
+
+let dup : Tforall a : *. Iforall n : Nat. List(n,!a) -> !(List(n,!a))
+= TLam a. fix dup = ILam n. lam xs.
+  case xs of
+    nil => !nil
+  | by :: ys => let !zs = dup [n-1] ys in
+                let !y = by in
+                !(!y :: zs)
+
+let select_sort : Iforall n : Nat. List(n,!nat) -> M(n|[0.0,1.0,1.0]) List(n,!nat) =
+  fix select_sort =
+  ILam n. lam xs.
+  case xs of
+    nil => ret nil
+  | y::ys => let! xs = dup {nat} [n] (y::ys) in
+             bind p = store[n|[0.0,1.0]]() in
+             bind r = select [n] [] p xs in
+             let (hd,rest) = r in
+             shift(
+                 bind zs = select_sort [n-1] rest in
+                 ret (hd :: zs)
+             )

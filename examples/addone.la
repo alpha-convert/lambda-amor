@@ -1,0 +1,12 @@
+let addOne : Iforall n : Nat.
+            List(n,[1.0] nat) ->
+            M (n|[0.0]) (List(n,nat))
+= fix addOne = ILam n. lam xs.
+  case xs of 
+    nil => ret nil
+  | py::ys => shift(
+                bind zs = addOne[n-1] ys in
+                release y = py in
+                bind _ = tick[n-1|[1.0]] in
+                ret ((y + 1) :: zs)
+              )

@@ -1,0 +1,4 @@
+#directory "src";;
+#mod_use "syntax.ml";;
+#mod_use "interp.ml";;
+#use "main.ml";;

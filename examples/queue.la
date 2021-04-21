@@ -1,0 +1,31 @@
+let enq : Tforall a : *. Iforall n : Nat. Iforall m : Nat.
+          [3.0] unit -> a -> List(n,[2.0] a)
+          -> List(m,a)
+          -> (Iforall j : Nat. M(j|[0.0]) ((List(n+1,[2.0] a)) * (List(m,a))))
+= TLam a. ILam n. ILam m. lam p. lam x. lam ins. lam outs. 
+  ILam j. release _ = p in bind u' = tick[j|[1.0]] in bind x' = (store[2.0] x : M(j|[2.0]) ([2.0] a)) in ret (x'::ins,outs)
+
+let move : Tforall a : *. Iforall n : Nat. Iforall m : Nat.
+           List(n, [2.0] a) -> List(m,a) -> (Iforall j : Nat. M(j|[0.0]) (List(m + n,a)))
+= TLam a. fix move = ILam n. ILam m. lam xs. lam ys. ILam j.
+case xs of
+  nil => ret ys
+| z::zs => release z' = z in
+           bind _ = tick[j|[2.0]] in
+           bind zs' = move [n-1] [m] zs ys [j] in
+           ret (z' :: zs')
+
+let dq : Tforall a : *. Iforall n : Nat. Iforall m : Nat.
+         <m + n >= 1> =>
+         List(n, [2.0] a) -> List(m, a) ->
+         (Iforall j : Nat. M(j|[0.0])(
+           Iexists n' : Nat. Iexists m' : Nat.
+           <n' + m' = (m + n) - 1, a * List(n',[2.0] a) * List(m',a)>
+         ))
+= TLam a. fix dq = ILam n. ILam m. CLam. lam l1 . lam l2. ILam j.
+case l2 of
+  nil => bind lr = move {a} [n] [0] l1 nil [j] in
+         case lr of
+           nil => fix x = x
+         | hr::lr' => ret(pack[0] (pack[n-1] <((hr,nil),lr')>))
+| h2::l2' => ret (pack[n] (pack[m-1] <((h2,l1),l2')>))

@@ -1,0 +1,28 @@
+type snat : Nat => * = ILam n : Nat. List(n,unit)
+
+let pred : Iforall i : Nat. <i >= 1> => snat [i] -> snat [i - 1]
+= ILam i. CLam. lam xs.
+case xs of
+  nil => absurd
+| y::ys => ys
+
+let foldr : Tforall a : *.
+            Tforall b : *.
+            Iforall n : Nat.
+            Iforall C : Nat -> Real.
+            !(Iforall i : Nat. [C i] unit -> snat [i] -> a -> b -> (Iforall j : Nat. M (j|[0.0]) b))
+            -> !(snat [n])
+            -> b
+            -> List(n,a)
+            -> [sum(i.C i,{0,n})] unit
+            -> (Iforall j : Nat. M(j|[0.0]) b)
+= TLam a. TLam b. fix foldr = ILam n. ILam C. lam bf. lam bc. lam s. lam ls. lam p.
+let !f = bf in
+let !c = bc in ILam j.
+case ls of
+  nil => ret s
+| h::t => release u = p in 
+          bind p' = (store[C (n-1)]() : M(j|const(C (n-1))) ([C (n-1)] unit)) in
+          bind p'' = (store[sum(i.C i,{0,n-1})]() : M(j|const(sum(i.C i,{0,n-1}))) ([sum(i.C i,{0,n-1})] unit)) in
+          bind tr = foldr [n-1] [C] (!f) (!(pred [n] [] c)) s t p'' [j] in
+          f [n-1] p' (pred [n] [] c) h tr [j]

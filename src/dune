@@ -1,0 +1,7 @@
+(executable
+  (name main)
+  (public_name main)
+  (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+  (libraries core why3)
+)
+
